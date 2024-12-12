@@ -1,6 +1,8 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <cstdint>
+#include <map>
 
 class Reassembler
 {
@@ -42,4 +44,9 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
+  std::map<uint64_t, std::string> substrings{};
+  std::pair<bool, uint64_t> is_last_substring_flag {false, 0};
+  uint64_t bytes_pending_{0};
+  // uint64_t first_unpopped_index {0};
+  // uint64_t first_unassembled_index {0};
 };
