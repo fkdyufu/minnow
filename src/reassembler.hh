@@ -9,7 +9,9 @@ class Reassembler
 {
 public:
   // Construct Reassembler to write into given ByteStream.
-  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ), is_last_substring_opt(std::nullopt) {}
+  explicit Reassembler( ByteStream&& output )
+    : output_( std::move( output ) ), is_last_substring_opt( std::nullopt )
+  {}
 
   /*
    * Insert a new substring to be reassembled into a ByteStream.
@@ -45,9 +47,9 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
-  std::map<uint64_t, std::string> substrings{};
+  std::map<uint64_t, std::string> substrings {};
   std::optional<uint64_t> is_last_substring_opt;
-  uint64_t bytes_pending_{0};
+  uint64_t bytes_pending_ { 0 };
   // uint64_t first_unpopped_index {0};
   // uint64_t first_unassembled_index {0};
 };
