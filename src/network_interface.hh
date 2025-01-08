@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+#include <map>
 #include <queue>
 
 #include "address.hh"
@@ -81,4 +83,10 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+  std::map<uint32_t, std::pair<EthernetAddress, uint64_t>> arp_table_ {};
+  std::list<std::pair<InternetDatagram, Address>> datagrams_wait_send_ {};
+  std::map<uint32_t, uint64_t> arp_sended_ {};
+  uint64_t current_time_ms_ {};
+  uint64_t ms_address_mapping_timeout_ { 30 * 1000 };
+  uint64_t ms_arp_send_interval_ { 5 * 1000 };
 };
