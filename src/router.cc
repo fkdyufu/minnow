@@ -45,10 +45,10 @@ std::optional<Router::Route_> Router::match_route( uint32_t address )
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
-  for ( auto net_iface : _interfaces ) {
-    auto datagrames = net_iface->datagrams_received();
+  for ( const auto& net_iface : _interfaces ) {
+    std::queue<InternetDatagram>& datagrames = net_iface->datagrams_received();
     while ( !datagrames.empty() ) {
-      auto inet_dgram = datagrames.front();
+      InternetDatagram inet_dgram = datagrames.front();
       datagrames.pop();
       // inet_dgram.header.dst;
       std::optional<Route_> route = match_route( inet_dgram.header.dst );
