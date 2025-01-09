@@ -12,8 +12,9 @@ uint64_t TCPSender::sequence_numbers_in_flight() const
   if ( outstanding_segments_queue_.size() != 0 ) {
     last_index = outstanding_segments_queue_.back().seqno.unwrap( isn_, next_seqno_ )
                  + outstanding_segments_queue_.back().sequence_length();
-    first_index = max( outstanding_segments_queue_.front().seqno.unwrap( isn_, next_seqno_ ),
-                       ackno_.unwrap( isn_, next_seqno_ ) );
+    // first_index = max( outstanding_segments_queue_.front().seqno.unwrap( isn_, next_seqno_ ),
+    //                    ackno_.unwrap( isn_, next_seqno_ ) );
+    first_index = outstanding_segments_queue_.front().seqno.unwrap( isn_, next_seqno_ );
   }
   return last_index - first_index;
 }
