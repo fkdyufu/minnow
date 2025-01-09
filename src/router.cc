@@ -11,6 +11,17 @@ using namespace std;
 // next_hop: The IP address of the next hop. Will be empty if the network is directly attached to the router (in
 //    which case, the next hop address should be the datagram's final destination).
 // interface_num: The index of the interface to send the datagram out on.
+uint32_t make_mask( uint8_t prefix_length )
+{
+  if ( prefix_length == 0 ) {
+    return 0x00000000; // 全部为0
+  } else if ( prefix_length >= 32 ) {
+    return 0xFFFFFFFF; // 全部为1
+  } else {
+    return ( 0xFFFFFFFF << ( 32 - prefix_length ) );
+  }
+}
+
 void Router::add_route( const uint32_t route_prefix,
                         const uint8_t prefix_length,
                         const optional<Address> next_hop,
@@ -27,12 +38,9 @@ std::optional<Router::Route_> Router::match_route( uint32_t address )
 {
   std::optional<Route_> best_match;
   uint8_t max_prefix_length = 0;
-  uint32_t mask = 0xffffffff;
+  uint32_t mask = 0;
   for ( const auto& route : routes_ ) {
-    if ( route.prefix_length != 32 ) {
-      mask >>= route.prefix_length;
-      mask <<= route.prefix_length;
-    }
+    mask = make_mask( route.prefix_length );
     if ( ( max_prefix_length == 0 || route.prefix_length > max_prefix_length )
          && ( address & mask ) == ( route.route_prefix & mask ) ) {
       best_match = route;
@@ -55,8 +63,9 @@ void Router::route()
       if ( !route.has_value() || inet_dgram.header.ttl == 0 || --inet_dgram.header.ttl == 0 ) {
         continue;
       }
+      inet_dgram.header.compute_checksum();
       _interfaces[route.value().interface_num]->send_datagram(
-        inet_dgram, route.value().next_hop.value_or( Address::from_ipv4_numeric( 0 ) ) );
+        inet_dgram, route.value().next_hop.value_or( Address::from_ipv4_numeric( inet_dgram.header.dst ) ) );
     }
   }
 }

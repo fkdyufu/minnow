@@ -42,6 +42,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
   if ( it != arp_table_.end() ) {
     transmit( make_frame( ethernet_address_, it->second.first, EthernetHeader::TYPE_IPv4, serialize( dgram ) ) );
   } else {
+    datagrams_wait_send_.push_back( { dgram, next_hop } );
     if ( arp_sended_.find( next_hop.ipv4_numeric() ) == arp_sended_.end() ) {
       transmit( make_frame( ethernet_address_,
                             ETHERNET_BROADCAST,
@@ -53,7 +54,6 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
                                                  next_hop.ipv4_numeric() ) ) ) );
       arp_sended_.insert( { next_hop.ipv4_numeric(), current_time_ms_ } );
     }
-    datagrams_wait_send_.push_back( { dgram, next_hop } );
   }
 }
 
