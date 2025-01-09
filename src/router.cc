@@ -20,11 +20,43 @@ void Router::add_route( const uint32_t route_prefix,
        << static_cast<int>( prefix_length ) << " => " << ( next_hop.has_value() ? next_hop->ip() : "(direct)" )
        << " on interface " << interface_num << "\n";
 
-  // Your code here.
+  routes_.push_back( { route_prefix, prefix_length, next_hop, interface_num } );
 }
 
+std::optional<Router::Route_> Router::match_route( uint32_t address )
+{
+  std::optional<Route_> best_match;
+  uint8_t max_prefix_length = 0;
+  uint32_t mask = 0xffffffff;
+  for ( const auto& route : routes_ ) {
+    if ( route.prefix_length != 32 ) {
+      mask >>= route.prefix_length;
+      mask <<= route.prefix_length;
+    }
+    if ( ( max_prefix_length == 0 || route.prefix_length > max_prefix_length )
+         && ( address & mask ) == ( route.route_prefix & mask ) ) {
+      best_match = route;
+      max_prefix_length = route.prefix_length;
+    }
+  }
+
+  return best_match;
+}
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
-  // Your code here.
+  for ( auto net_iface : _interfaces ) {
+    auto datagrames = net_iface->datagrams_received();
+    while ( !datagrames.empty() ) {
+      auto inet_dgram = datagrames.front();
+      datagrames.pop();
+      // inet_dgram.header.dst;
+      std::optional<Route_> route = match_route( inet_dgram.header.dst );
+      if ( !route.has_value() || inet_dgram.header.ttl == 0 || --inet_dgram.header.ttl == 0 ) {
+        continue;
+      }
+      _interfaces[route.value().interface_num]->send_datagram(
+        inet_dgram, route.value().next_hop.value_or( Address::from_ipv4_numeric( 0 ) ) );
+    }
+  }
 }
